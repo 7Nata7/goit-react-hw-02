@@ -1,35 +1,54 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from "react";
+import Description from "./Components/Description/Descriptions";
+import Options from "./Components/Options/Options";
+import Feedback from "./Components/Feedback/Feedback";
+import Notification from "./Components/Notification/Notification";
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const initialCounts = JSON.parse(localStorage.getItem("feedbackCounts")) || {
+    good: 0,
+    neutral: 0,
+    bad: 0,
+  };
+  const [feedbackCounts, setFeedbackCounts] = useState(initialCounts);
+
+  useEffect(() => {
+    localStorage.setItem("feedbackCounts", JSON.stringify(feedbackCounts));
+  }, [feedbackCounts]);
+
+  const updateFeedback = (feedbackType) => {
+    setFeedbackCounts((prevCounts) => ({
+      ...prevCounts,
+      [feedbackType]: prevCounts[feedbackType] + 1,
+    }));
+  };
+
+  const totalFeedback =
+    feedbackCounts.good + feedbackCounts.neutral + feedbackCounts.bad;
+  const positiveFeedback = Math.round(
+    (feedbackCounts.good / totalFeedback) * 100
+  );
+
+  const handleReset = () => {
+    setFeedbackCounts({
+      good: 0,
+      neutral: 0,
+      bad: 0,
+    });
+  };
 
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <Description />
+      <Options
+        updateFeedback={updateFeedback}
+        totalFeedback={totalFeedback}
+        handleReset={handleReset}
+      />
+      {totalFeedback > 0 && (
+        <Feedback state={feedbackCounts} positiveFeedback={positiveFeedback} />
+      )}
+      {totalFeedback === 0 && <Notification />}
     </>
-  )
+  );
 }
-
-export default App
